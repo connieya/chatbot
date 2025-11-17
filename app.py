@@ -20,7 +20,7 @@ class AppConfig:
 class DocumentChatbotApp:
     def __init__(self):
         self.config = AppConfig()
-        self.document_loader = DocumentLoader(self.config.DOCS_PATH)아
+        self.document_loader = DocumentLoader(self.config.DOCS_PATH)
         self.embedding_service = EmbeddingService(self.config.CHROMA_PATH)
         self.chatbot = Chatbot()
         self.is_initialized = False
