@@ -48,14 +48,29 @@ class Chatbot:
         
         return has_doc_keyword or has_relevant_content
     
-    def ask_ollama(self, prompt: str) -> str:
-        """Ollama에 직접 요청"""
+    def ask_ollama(self, prompt: str, is_korean_question: bool = False) -> str:
+        """Ollama에 직접 요청 - mistral 모델 사용"""
         try:
             ollama_url = "http://host.docker.internal:11434"
             
+            # 한국어 질문일 경우 프롬프트 강화
+            if is_korean_question:
+                enhanced_prompt = f"""다음 질문이나 지시에 대해 한국어로 친절하게 답변해주세요:
+
+{prompt}
+
+지시사항:
+- 반드시 한국어로 답변해주세요
+- 명확하고 간결하게 답변해주세요
+- 자연스러운 한국어 문장을 사용해주세요
+
+답변:"""
+            else:
+                enhanced_prompt = prompt
+            
             payload = {
-                "model": "llama2",
-                "prompt": prompt,
+                "model": "mistral",  # llama2 → mistral로 변경
+                "prompt": enhanced_prompt,
                 "stream": False
             }
             
@@ -72,7 +87,12 @@ class Chatbot:
         """간단한 설정"""
         self.vectorstore = vectorstore
         self.check_ollama()
-        print("✅ 챗봇 설정 완료")
+        print("✅ 챗봇 설정 완료 (mistral 모델)")
+    
+    def is_korean_question(self, question: str) -> bool:
+        """질문이 한국어인지 판단"""
+        korean_chars = set('가나다라마바사아자차카타파하햐여요우유으이')
+        return any(char in korean_chars for char in question)
     
     def ask_question(self, question: str) -> Tuple[str, List]:
         """질문에 답변 - 문서 관련성에 따라 다른 처리"""
@@ -86,34 +106,54 @@ class Chatbot:
             # 2. 질문이 문서와 관련있는지 판단
             is_related = self.is_document_related_question(question, source_docs)
             
-            # 3. 관련성에 따라 다른 프롬프트 사용
+            # 3. 한국어 질문인지 확인
+            is_korean = self.is_korean_question(question)
+            
+            # 4. 관련성에 따라 다른 프롬프트 사용
             if is_related and source_docs:
                 # 문서 관련 질문 → 문서 기반 답변
                 context = "\n\n".join([doc.page_content for doc in source_docs])
-                prompt = f"""다음 문서 내용을 바탕으로 질문에 답변해주세요:
+                prompt = f"""You are a helpful AI assistant. Provide accurate answers based on the provided document content.
 
-문서 내용:
+Document content:
 {context}
 
-질문: {question}
+Question: {question}
 
-지시사항:
-- 문서에 명시된 정보를 바탕으로 답변하세요
-- 문서에 없는 정보는 추가하지 마세요
-- 명확하고 간결하게 답변하세요
+Instructions:
+- Answer based on document content when relevant
+- Provide clear and concise answers
+- Respond in the same language as the question
 
-답변:"""
-                answer = self.ask_ollama(prompt) if self.is_ollama_available else "Ollama 필요"
+Answer:"""
+                answer = self.ask_ollama(prompt, is_korean) if self.is_ollama_available else "Ollama 필요"
                 return answer, source_docs  # 참조 문서 표시
                 
             else:
                 # 일반 질문 → LLM의 일반 지식으로 답변
-                prompt = f"""다음 일반 질문에 대해 당신의 지식을 바탕으로 친절하게 답변해주세요:
+                if is_korean:
+                    prompt = f"""다음 일반 질문에 대해 한국어로 친절하게 답변해주세요:
 
 질문: {question}
 
+지시사항:
+- 반드시 한국어로 답변해주세요
+- 명확하고 간결하게 설명해주세요
+- 자연스러운 한국어 문장을 사용해주세요
+
 답변:"""
-                answer = self.ask_ollama(prompt) if self.is_ollama_available else "Ollama 필요"
+                else:
+                    prompt = f"""Please answer the following general question based on your knowledge:
+
+Question: {question}
+
+Instructions:
+- Provide a clear and helpful answer
+- Be concise and accurate
+
+Answer:"""
+                
+                answer = self.ask_ollama(prompt, is_korean) if self.is_ollama_available else "Ollama 필요"
                 return answer, []  # 참조 문서 없음
             
         except Exception as e:
