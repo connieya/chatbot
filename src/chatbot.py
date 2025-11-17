@@ -19,35 +19,76 @@ class Chatbot:
             return False
     
     def is_document_related_question(self, question: str, source_docs: List) -> bool:
-        """질문이 문서와 관련있는지 판단"""
-        # 문서 관련 키워드
-        doc_keywords = [
-            "ai agent", "agent", "autonomous", "semiautonomous", "snowflake",
-            "document", "문서", "내용", "pdf", "파일", "기술", "정의", "정의는",
-            "무엇인가", "뭐야", "what is", "definition"
-        ]
-        
+        """질문이 문서와 관련있는지 판단 - 개선된 키워드"""
         question_lower = question.lower()
         
-        # 1. 문서 키워드가 질문에 있는지
-        has_doc_keyword = any(keyword in question_lower for keyword in doc_keywords)
-        
-        # 2. 검색된 문서가 실제로 관련있는지 (간단한 검증)
-        if source_docs:
-            # 문서 내용을 하나의 문자열로 합침
-            all_content = " ".join([doc.page_content.lower() for doc in source_docs])
-            # 질문 단어들이 문서 내용에 있는지 확인
-            question_words = set(question_lower.split())
-            content_words = set(all_content.split())
-            common_words = question_words.intersection(content_words)
+        # 문서 특정 주제 (목차 기반으로 확장)
+        document_specific_topics = [
+            # 문서 메타데이터
+            "market sharing", "erica yu", "ai agent market",
             
-            # 공통 단어가 2개 이상이면 관련 있다고 판단
-            has_relevant_content = len(common_words) >= 2
-        else:
-            has_relevant_content = False
+            # 1. Definition about AI Agent
+            "definition", "gartner definition", "autonomous", "semiautonomous",
+            "software entities", "perceive", "make decisions", "take actions", 
+            "achieve goals", "digital environments", "physical environments",
+            
+            # 2. Growing Market momentum
+            "growing market", "market momentum", "andrew ng", "snowflake build 2024",
+            "investment boom", "funding", "startups", "market potential",
+            "enterprise software", "agentic ai", "autonomously", 
+            "market growth", "cb insights", "organizations",
+            
+            # 3. About Manus
+            "manus", "breakthrough", "hype",
+            
+            # 4. Technological readiness
+            "technological readiness", "boost",
+            
+            # 5. Future trends
+            "future trends", "independent agency", "multiagent systems", "mas",
+            "improvement", "capabilities",
+            
+            # 6. Landscape of AI Agent
+            "landscape", "big tech", "general ai agent", "specialized agents",
+            "capital markets", "private ai agent", "infrastructure", "framework",
+            "tooling", "alibaba cloud", "development platforms", "ecosystem",
+            
+            # 7. Customer list
+            "customer list",
+            
+            # 핵심 숫자 및 통계
+            "33%", "15%", "5.1 billion", "47.1 billion", "2030", "2024",
+            "63%", "4x", "3x", "15k", "q4 2024",
+            
+            # 한국어 키워드
+            "시장 점유율", "에리카 유", "정의", "자율", "반자율",
+            "시장 성장", "투자 붐", "스타트업", "기업용 소프트웨어",
+            "미래 동향", "다중 에이전트", "랜드스케이프", "인프라",
+            "고객 목록", "알리바바 클라우드"
+        ]
         
-        return has_doc_keyword or has_relevant_content
-    
+        has_topic_keyword = any(topic in question_lower for topic in document_specific_topics)
+        
+        # 더 다양한 질문 패턴 인식
+        question_patterns = [
+            "정의", "정의는", "무엇인가", "뭐야", "what is", "definition",
+            "특징", "특성", "feature", "characteristic", 
+            "기능", "function", "역할", "role",
+            "종류", "type", "유형", "category",
+            "활용", "application", "사용", "use",
+            "전망", "예측", "forecast", "prediction",
+            "현황", "상황", "status", "current state",
+            "규모", "크기", "size", "scale",
+            "성장", "성장률", "growth", "rate",
+            "동향", "트렌드", "trend", "tendency",
+            "비율", "퍼센트", "percent", "percentage"
+        ]
+        
+        has_question_pattern = any(pattern in question_lower for pattern in question_patterns)
+        
+        # 주제 키워드가 있고, 질문 패턴이 있거나 문장이 충분히 길 때
+        return has_topic_keyword and (has_question_pattern or len(question.split()) >= 3)
+        
     def ask_ollama(self, prompt: str, is_korean_question: bool = False) -> str:
         """Ollama에 직접 요청 - mistral 모델 사용"""
         try:
@@ -57,14 +98,14 @@ class Chatbot:
             if is_korean_question:
                 enhanced_prompt = f"""다음 질문이나 지시에 대해 한국어로 친절하게 답변해주세요:
 
-{prompt}
+                {prompt}
 
-지시사항:
-- 반드시 한국어로 답변해주세요
-- 명확하고 간결하게 답변해주세요
-- 자연스러운 한국어 문장을 사용해주세요
+                지시사항:
+                - 반드시 한국어로 답변해주세요
+                - 명확하고 간결하게 답변해주세요
+                - 자연스러운 한국어 문장을 사용해주세요
 
-답변:"""
+                답변:"""
             else:
                 enhanced_prompt = prompt
             
@@ -115,17 +156,17 @@ class Chatbot:
                 context = "\n\n".join([doc.page_content for doc in source_docs])
                 prompt = f"""You are a helpful AI assistant. Provide accurate answers based on the provided document content.
 
-Document content:
-{context}
+                Document content:
+                {context}
 
-Question: {question}
+                Question: {question}
 
-Instructions:
-- Answer based on document content when relevant
-- Provide clear and concise answers
-- Respond in the same language as the question
+                Instructions:
+                - Answer based on document content when relevant
+                - Provide clear and concise answers
+                - Respond in the same language as the question
 
-Answer:"""
+                Answer:"""
                 answer = self.ask_ollama(prompt, is_korean) if self.is_ollama_available else "Ollama 필요"
                 return answer, source_docs  # 참조 문서 표시
                 
@@ -134,24 +175,24 @@ Answer:"""
                 if is_korean:
                     prompt = f"""다음 일반 질문에 대해 한국어로 친절하게 답변해주세요:
 
-질문: {question}
+                    질문: {question}
 
-지시사항:
-- 반드시 한국어로 답변해주세요
-- 명확하고 간결하게 설명해주세요
-- 자연스러운 한국어 문장을 사용해주세요
+                    지시사항:
+                    - 반드시 한국어로 답변해주세요
+                    - 명확하고 간결하게 설명해주세요
+                    - 자연스러운 한국어 문장을 사용해주세요
 
-답변:"""
+                    답변:"""
                 else:
                     prompt = f"""Please answer the following general question based on your knowledge:
 
-Question: {question}
+                    Question: {question}
 
-Instructions:
-- Provide a clear and helpful answer
-- Be concise and accurate
+                    Instructions:
+                    - Provide a clear and helpful answer
+                    - Be concise and accurate
 
-Answer:"""
+                    Answer:"""
                 
                 answer = self.ask_ollama(prompt, is_korean) if self.is_ollama_available else "Ollama 필요"
                 return answer, []  # 참조 문서 없음
