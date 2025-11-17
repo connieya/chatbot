@@ -3,6 +3,7 @@
 문서 기반 질의응답과 일반 대화가 가능한 RAG(Retrieval-Augmented Generation) 기반 AI 챗봇입니다.
 
 ---
+![alt text](image.png)
 
 ## 목차
 
