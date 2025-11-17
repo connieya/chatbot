@@ -1,22 +1,22 @@
-# 🤖 AI 문서 챗봇
+# AI 문서 챗봇
 
 문서 기반 질의응답과 일반 대화가 가능한 RAG(Retrieval-Augmented Generation) 기반 AI 챗봇입니다.
 
 ---
 
-## 📋 목차
+## 목차
 
 - [개발 언어 및 선택 이유](#개발-언어-및-선택-이유)
 - [사용한 LLM 모델 및 선택 이유](#사용한-llm-모델-및-선택-이유)
 - [프로그램 실행 방법](#프로그램-실행-방법)
-- [주요 기능](#주요-기능)
 - [프로젝트 구조](#프로젝트-구조)
+- [기술 스택](#기술-스택)
 - [현재 한계](#현재-한계)
 - [향후 개선 방향](#향후-개선-방향)
 
 ---
 
-## 🐍 개발 언어 및 선택 이유
+## 개발 언어 및 선택 이유
 
 ### 개발 언어: **Python**
 
@@ -43,7 +43,7 @@
 
 ---
 
-## 🤖 사용한 LLM 모델 및 선택 이유
+## 사용한 LLM 모델 및 선택 이유
 
 ### LLM 모델: **Ollama (mistral)**
 
@@ -74,16 +74,6 @@
    - 컨테이너 환경에서 쉽게 연동
    - `host.docker.internal`을 통한 네트워크 연결
 
-### 모델 설치 방법
-
-```bash
-# mistral 모델 다운로드
-ollama pull mistral
-
-# 또는 llama2 모델 (대체 옵션)
-ollama pull llama2
-```
-
 ### 임베딩 모델: **HuggingFace (paraphrase-multilingual-MiniLM-L12-v2)**
 
 ### 선택 이유
@@ -104,16 +94,17 @@ ollama pull llama2
 
 ---
 
-## 🚀 프로그램 실행 방법
+## 프로그램 실행 방법
 
 ### 사전 요구사항
 
+1. **Python 3.9, 3.10, 3.11, 3.12**
 
-1. **Python 3.9, 3.10, 3.11, 3.12** 
    - 3.13, 3.14 버전은 호환성 문제가 있을 수 있습니다
    - Docker 사용시 Python 버전 문제 없음
 
 2. **Ollama 설치 및 실행**
+
 #### 운영체제별 설치
 
 ```bash
@@ -127,6 +118,7 @@ brew install ollama
 # Linux
 curl -fsSL https://ollama.ai/install.sh | sh
 ```
+
 #### Ollama 모델 다운로드
 
 ```bash
@@ -137,13 +129,13 @@ ollama pull mistral
 ollama pull llama2
 ollama pull gemma:7b
 ```
+
 #### Ollama 실행
 
 ```bash
 # Ollama 서버 실행 (별도 터미널에서)
 ollama serve
 ```
-
 
 ### 설치 및 실행
 
@@ -207,11 +199,9 @@ docker build -t chatbot .
 docker run -p 8501:8501 chatbot
 ```
 
-
-
 ---
 
-## 📁 프로젝트 구조
+## 프로젝트 구조
 
 ```
 chatbot/
@@ -228,7 +218,7 @@ chatbot/
 
 ---
 
-## 🔧 기술 스택
+## 기술 스택
 
 - **프레임워크**: Streamlit
 - **RAG 프레임워크**: LangChain
@@ -239,7 +229,7 @@ chatbot/
 
 ---
 
-## 🚧 현재 한계
+## 현재 한계
 
 1. **문서 의존적 키워드 하드코딩**
 
@@ -272,7 +262,7 @@ chatbot/
 
 ---
 
-## 🔮 향후 개선 방향
+## 향후 개선 방향
 
 1. **동적 키워드 추출 시스템**
 
@@ -327,5 +317,3 @@ chatbot/
    - 소스 신뢰도 평가 및 가중치 부여, 대화 세션 컨텍스트 유지
 
 ---
-
-
