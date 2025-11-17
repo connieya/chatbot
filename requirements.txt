@@ -1,0 +1,17 @@
+langchain
+langchain-community
+langchain-core
+langchain-huggingface
+langchain-text-splitters
+langchain-chroma
+
+chromadb
+pypdf
+python-dotenv
+streamlit
+sentence-transformers
+faiss-cpu
+transformers
+torch
+huggingface-hub
+numpy
